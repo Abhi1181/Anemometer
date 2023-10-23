@@ -1,0 +1,38 @@
+const int sensorPin = 2; // Digital pin where the sensor is connected
+unsigned long startTime = 0; // Time when the sensor is triggered
+unsigned long endTime = 0; // Time when the sensor stops detecting the object
+unsigned long pulseDuration = 0; // Duration of the pulse
+unsigned long lastUpdateTime = 0; // Time of the last RPM update
+unsigned long rpm = 0; // Stores the calculated RPM
+int sensorState = LOW; // Current state of the sensor
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(sensorPin, INPUT);
+}
+
+void loop() {
+  sensorState = digitalRead(sensorPin);
+
+  if (sensorState == HIGH) {
+    // Object detected, start measuring
+    if (startTime == 0) {
+      startTime = micros();
+    }
+  } else {
+    // Object not detected, stop measuring
+    if (startTime > 0) {
+      endTime = micros();
+      pulseDuration = endTime - startTime;
+      startTime = 0;
+      
+      // Calculate RPM every second or as desired
+      if (micros() - lastUpdateTime >= 1000000) {
+        rpm = 60000000 / (pulseDuration * 2); // Assuming 2 sensor triggers per rotation
+        Serial.print("RPM: ");
+        Serial.println(rpm);
+        lastUpdateTime = micros();
+      }
+    }
+  }
+}
